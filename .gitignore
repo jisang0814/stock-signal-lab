@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual env
+.venv/
+venv/
+
+# Local runtime data
+/data/alerts_config.json
+/data/alerts_state.json
+/data/alerts_history.csv
+/data/ops_checklist.json
+/data/signal_log.csv
+/data/yf_tz_cache/
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
