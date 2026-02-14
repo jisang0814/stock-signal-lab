@@ -58,7 +58,8 @@ with k2:
 with k3:
     st.metric("매도 신호", f"{(df['signal'] == '매도').sum()}")
 with k4:
-    st.metric("평균 점수", f"{df['score'].mean():.1f}")
+    hybrid_mean = df["hybrid_score"].mean() if "hybrid_score" in df.columns else df["score"].mean()
+    st.metric("평균 하이브리드", f"{hybrid_mean:.1f}")
 with k5:
     hist = load_alert_history(limit=50)
     if hist is not None and not hist.empty:
@@ -124,11 +125,21 @@ with h1:
 
 with h2:
     st.subheader("Top 5")
-    top_mode = st.radio("기준", ["시가총액", "거래대금", "점수"], horizontal=True)
-    sort_col = {"시가총액": "market_cap", "거래대금": "volume_value", "점수": "score"}[top_mode]
+    top_options = ["시가총액", "거래대금", "기술 점수"]
+    if "hybrid_score" in df.columns:
+        top_options.append("하이브리드 점수")
+    top_mode = st.radio("기준", top_options, horizontal=True)
+    sort_col = {
+        "시가총액": "market_cap",
+        "거래대금": "volume_value",
+        "기술 점수": "score",
+        "하이브리드 점수": "hybrid_score",
+    }[top_mode]
     top5 = df.sort_values(sort_col, ascending=False).head(5)
+    top_cols = ["symbol_name", "market", "price", "change_pct", "signal", "score", "hybrid_score", "hybrid_label"]
+    top_cols = [c for c in top_cols if c in top5.columns]
     st.dataframe(
-        top5[["symbol_name", "market", "price", "change_pct", "signal", "score"]],
+        top5[top_cols],
         use_container_width=True,
         hide_index=True,
     )
@@ -144,4 +155,6 @@ for idx, (_, row) in enumerate(card_base.iterrows()):
         st.caption(f"가격 {row['price']:,.2f} | 변동률 {row['change_pct']:+.2f}%")
         st.write(generate_ai_comment(row))
         st.metric("Action", row["signal"])
-        st.metric("Score", f"{row['score']:.1f}")
+        st.metric("Tech Score", f"{row['score']:.1f}")
+        if "hybrid_score" in row.index:
+            st.metric("Hybrid", f"{row['hybrid_score']:.1f} ({row.get('hybrid_label', '-')})")
